@@ -1,6 +1,9 @@
 package glippy
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestSetGet(t *testing.T) {
 	tests := []struct {
@@ -39,6 +42,45 @@ func TestSetGet(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("Get() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestWatch(t *testing.T) {
+	tests := []struct {
+		name    string
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "abc",
+			want: "abc",
+		},
+		{
+			name: "empty",
+			want: "",
+		},
+		{
+			name: "emoji",
+			want: "🔥",
+		},
+		{
+			name: "utf8",
+			want: "aš tave myliu",
+		},
+	}
+
+	ch := Watch(context.Background())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := Set(tt.want)
+			if err != nil {
+				return
+			}
+			got := <-ch
+			if got != tt.want {
+				t.Errorf("Watch() = %v, want %v", got, tt.want)
 			}
 		})
 	}
