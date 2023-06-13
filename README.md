@@ -40,6 +40,25 @@ func main(){
 ```
 
 
+```go
+package main
+
+import (
+  "context"
+  "fmt"
+  "github.com/f1bonacc1/glippy"
+)
+
+func main(){
+  // create clipboard watch channel
+  ch := glippy.Watch(context.Background())
+	
+  for data := range ch {
+    fmt.Println(data)
+  }
+}
+```
+
 
 ### Credits
 
