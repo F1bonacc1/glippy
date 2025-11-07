@@ -6,6 +6,11 @@ import (
 )
 
 func TestSetGet(t *testing.T) {
+	_, err := Get()
+	if err != nil && err.Error() == "no X11 connection available" {
+		t.Skip("no X11 connection available, skipping tests")
+	}
+
 	tests := []struct {
 		name    string
 		want    string
