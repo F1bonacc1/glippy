@@ -24,10 +24,15 @@ var targetAtoms []xproto.Atom
 var clipboardAtomCache = map[xproto.Atom]string{}
 
 func start() {
+	if isWayland() {
+		return
+	}
 	var err error
 	X, err = xgb.NewConnDisplay("")
 	if err != nil {
-		panic(err)
+		// non-fatal, as we might be on wayland without X, or other issues.
+		// get() and set() will handle the nil X connection.
+		return
 	}
 
 	selnotify = make(chan bool, 1)
@@ -56,6 +61,12 @@ func start() {
 }
 
 func set(text string) error {
+	if isWayland() {
+		return setWayland(text)
+	}
+	if X == nil {
+		return fmt.Errorf("no X11 connection available")
+	}
 	clipboardText = text
 	ssoc := xproto.SetSelectionOwnerChecked(X, win, clipboardAtom, xproto.TimeCurrentTime)
 	if err := ssoc.Check(); err != nil {
@@ -69,6 +80,12 @@ func set(text string) error {
 }
 
 func get() (string, error) {
+	if isWayland() {
+		return getWayland()
+	}
+	if X == nil {
+		return "", fmt.Errorf("no X11 connection available")
+	}
 	return getSelection(clipboardAtom), nil
 }
 
