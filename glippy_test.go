@@ -36,6 +36,11 @@ func TestSetGet(t *testing.T) {
 			want:    "aš tave myliu",
 			wantErr: false,
 		},
+		{
+			name:    "multiple lines",
+			want:    "line1\nline2\nline3\n",
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
