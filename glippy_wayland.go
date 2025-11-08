@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 func isWayland() bool {
@@ -23,7 +24,8 @@ func getWayland() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(out), nil
+	read_line := strings.TrimSuffix(string(out), "\n")
+	return read_line, nil
 }
 
 func setWayland(text string) error {
