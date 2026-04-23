@@ -94,7 +94,7 @@ func get() (string, error) {
 	return text, nil
 }
 
-func set(text string) error {
+func set(text string) (string, error) {
 	// LockOSThread ensure that the whole method will keep executing on the same thread from begin to end (it actually locks the goroutine thread attribution).
 	// Otherwise if the goroutine switch thread during execution (which is a common practice), the OpenClipboard and CloseClipboard will happen on two different threads, and it will result in a clipboard deadlock.
 	runtime.LockOSThread()
@@ -102,13 +102,13 @@ func set(text string) error {
 
 	err := waitOpenClipboard()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	r, _, err := emptyClipboard.Call(0)
 	if r == 0 {
 		_, _, _ = closeClipboard.Call()
-		return err
+		return "", err
 	}
 
 	data := syscall.StringToUTF16(text)
@@ -118,7 +118,7 @@ func set(text string) error {
 	h, _, err := globalAlloc.Call(gmemMoveable, uintptr(len(data)*int(unsafe.Sizeof(data[0]))))
 	if h == 0 {
 		_, _, _ = closeClipboard.Call()
-		return err
+		return "", err
 	}
 	defer func() {
 		if h != 0 {
@@ -129,32 +129,32 @@ func set(text string) error {
 	l, _, err := globalLock.Call(h)
 	if l == 0 {
 		_, _, _ = closeClipboard.Call()
-		return err
+		return "", err
 	}
 
 	r, _, err = lstrcpy.Call(l, uintptr(unsafe.Pointer(&data[0])))
 	if r == 0 {
 		_, _, _ = closeClipboard.Call()
-		return err
+		return "", err
 	}
 
 	r, _, err = globalUnlock.Call(h)
 	if r == 0 {
 		if err.(syscall.Errno) != 0 {
 			_, _, _ = closeClipboard.Call()
-			return err
+			return "", err
 		}
 	}
 
 	r, _, err = setClipboardData.Call(cfUnicodetext, h)
 	if r == 0 {
 		_, _, _ = closeClipboard.Call()
-		return err
+		return "", err
 	}
 	h = 0 // suppress deferred cleanup
 	closed, _, err := closeClipboard.Call()
 	if closed == 0 {
-		return err
+		return "", err
 	}
-	return nil
+	return MethodNative, nil
 }

@@ -60,12 +60,15 @@ func start() {
 	go eventLoop()
 }
 
-func set(text string) error {
+func set(text string) (string, error) {
 	if isWayland() {
-		return setWayland(text)
+		if err := setWayland(text); err != nil {
+			return MethodOSC52, setOSC52(text)
+		}
+		return MethodNative, nil
 	}
 	if X == nil {
-		return fmt.Errorf("no X11 connection available")
+		return MethodOSC52, setOSC52(text)
 	}
 	clipboardText = text
 	ssoc := xproto.SetSelectionOwnerChecked(X, win, clipboardAtom, xproto.TimeCurrentTime)
@@ -76,7 +79,7 @@ func set(text string) error {
 	if err := ssoc.Check(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error setting primary selection: %v", err)
 	}
-	return nil
+	return MethodNative, nil
 }
 
 func get() (string, error) {

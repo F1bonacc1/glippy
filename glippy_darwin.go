@@ -35,21 +35,24 @@ func get() (string, error) {
 	return string(out), nil
 }
 
-func set(text string) error {
+func set(text string) (string, error) {
 	copyCmd := getCopyCommand()
 	in, err := copyCmd.StdinPipe()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if err := copyCmd.Start(); err != nil {
-		return err
+		return "", err
 	}
 	if _, err := in.Write([]byte(text)); err != nil {
-		return err
+		return "", err
 	}
 	if err := in.Close(); err != nil {
-		return err
+		return "", err
 	}
-	return copyCmd.Wait()
+	if err := copyCmd.Wait(); err != nil {
+		return "", err
+	}
+	return MethodNative, nil
 }
