@@ -8,6 +8,18 @@ import (
 
 const baseWatchInterval = time.Second * 1
 
+// Clipboard method identifiers returned by SetWithMethod.
+const (
+	// MethodNative indicates the OS clipboard was used (X11, Wayland, pbcopy,
+	// Windows clipboard API).
+	MethodNative = "native"
+	// MethodOSC52 indicates the OSC 52 escape-sequence fallback was used.
+	// OSC 52 is fire-and-forget: success means the sequence was written to the
+	// terminal, not that the terminal honored it. Many terminal emulators
+	// disable OSC 52 writes by default.
+	MethodOSC52 = "osc52"
+)
+
 var once sync.Once
 
 func startOnce() {
@@ -16,8 +28,15 @@ func startOnce() {
 	})
 }
 
-// Set set clipboard content
+// Set sets clipboard content.
 func Set(text string) error {
+	_, err := SetWithMethod(text)
+	return err
+}
+
+// SetWithMethod sets clipboard content and reports which mechanism was used.
+// See the Method* constants for possible values.
+func SetWithMethod(text string) (method string, err error) {
 	startOnce()
 	return set(text)
 }

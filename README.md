@@ -8,7 +8,17 @@ Couldn't find a go clipboard package which is both multi-platform and doesn't re
 
 - OSX
 - Windows
-- Linux, Unix
+- Linux, Unix (X11 and Wayland)
+- OSC 52 fallback — used automatically over SSH or in headless environments where neither X11 nor Wayland is reachable
+
+### OSC 52 fallback
+
+When the native clipboard is unavailable on Linux/FreeBSD (no X11 connection, or Wayland without `wl-clipboard`), `Set` falls back to writing an [OSC 52](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Operating-System-Commands) escape sequence to `/dev/tty`. Most modern terminals honor this: iTerm2, WezTerm, kitty, Alacritty, foot, and xterm (with `allowWindowOps` enabled).
+
+- **tmux**: set `set-option -g set-clipboard on` in `~/.tmux.conf` so tmux forwards the sequence. Glippy wraps the sequence in tmux's DCS passthrough when `TMUX` is set.
+- **Size limit**: OSC 52 payloads are capped at ~75 KB of plaintext; larger selections return an error rather than silently truncating.
+- **Disable**: set `GLIPPY_DISABLE_OSC52=1` to skip this fallback entirely.
+- **Windows**: OSC 52 is not used on Windows; the native clipboard path is always taken.
 
 ### Quick Start
 
